@@ -128,3 +128,128 @@
     @apply font-sans;
   }
 }
+/* Article prose styles */
+.prose {
+  max-width: 65ch;
+  line-height: 1.8;
+}
+
+.prose h2 {
+  margin-top: 2em;
+  margin-bottom: 0.5em;
+  font-size: 1.5em;
+  font-weight: 700;
+}
+
+.prose h3 {
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  font-size: 1.25em;
+  font-weight: 600;
+}
+
+.prose p {
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+.prose a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.prose a:hover {
+  opacity: 0.8;
+}
+
+.prose pre {
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+  padding: 1em;
+  border-radius: 0.5em;
+  overflow-x: auto;
+  font-size: 0.875em;
+}
+
+.prose code:not(pre code) {
+  padding: 0.2em 0.4em;
+  border-radius: 0.25em;
+  font-size: 0.875em;
+  background: var(--muted);
+}
+
+.prose blockquote {
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+  padding-left: 1em;
+  border-left: 3px solid var(--border);
+  color: var(--muted-foreground);
+}
+
+.prose ul,
+.prose ol {
+  margin-top: 1em;
+  margin-bottom: 1em;
+  padding-left: 1.5em;
+}
+
+.prose li {
+  margin-top: 0.25em;
+  margin-bottom: 0.25em;
+}
+
+.prose table {
+  width: 100%;
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+  border-collapse: collapse;
+}
+
+.prose th,
+.prose td {
+  padding: 0.75em;
+  border: 1px solid var(--border);
+  text-align: left;
+}
+
+.prose th {
+  font-weight: 600;
+  background: var(--muted);
+}
+
+.prose img {
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+  border-radius: 0.5em;
+}
+
+.prose hr {
+  margin-top: 2em;
+  margin-bottom: 2em;
+  border-color: var(--border);
+}
+
+/* KaTeX */
+.katex-display {
+  margin: 1.5em 0;
+  overflow-x: auto;
+}
+
+/* Code block line numbers */
+[data-rehype-pretty-code-figure] pre {
+  padding: 0;
+  margin: 1.5em 0;
+}
+
+[data-rehype-pretty-code-figure] code {
+  display: grid;
+}
+
+[data-rehype-pretty-code-figure] code .line {
+  padding: 0 1em;
+}
+
+[data-rehype-pretty-code-figure] [data-highlighted-line] {
+  background: rgba(255, 255, 255, 0.1);
+}

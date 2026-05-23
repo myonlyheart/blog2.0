@@ -3,6 +3,7 @@ import Link from "next/link"
 import { getPostBySlug, getAllSlugs, getAdjacentPosts } from "@/lib/posts"
 import { renderMDX } from "@/lib/mdx"
 import { TOC } from "@/components/toc"
+import { ReadingProgress } from "@/components/reading-progress"
 import { ArrowLeft, ArrowRight } from "lucide-react"
 import type { Metadata } from "next"
 
@@ -41,7 +42,9 @@ export default async function PostPage({ params }: Props) {
   const { prev, next } = getAdjacentPosts(slug)
 
   return (
-    <div className="container mx-auto max-w-6xl px-4 py-16">
+    <>
+      <ReadingProgress />
+      <div className="container mx-auto max-w-6xl px-4 py-16">
       <div className="flex gap-12">
         <article className="min-w-0 flex-1">
           <header className="mb-8">
@@ -98,5 +101,6 @@ export default async function PostPage({ params }: Props) {
         </aside>
       </div>
     </div>
+    </>
   )
 }

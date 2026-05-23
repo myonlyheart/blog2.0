@@ -6,6 +6,12 @@ export const siteConfig = {
   links: {
     github: "https://github.com/myonlyheart",
   },
+  giscus: {
+    repo: "myonlyheart/blog",
+    repoId: "",
+    category: "General",
+    categoryId: "",
+  },
   navItems: [
     { label: "首页", href: "/" },
     { label: "文章", href: "/posts" },

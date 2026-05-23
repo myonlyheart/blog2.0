@@ -4,6 +4,8 @@ import { getPostBySlug, getAllSlugs, getAdjacentPosts } from "@/lib/posts"
 import { renderMDX } from "@/lib/mdx"
 import { TOC } from "@/components/toc"
 import { ReadingProgress } from "@/components/reading-progress"
+import { ShareButtons } from "@/components/share-buttons"
+import { siteConfig } from "@/config/site"
 import { ArrowLeft, ArrowRight } from "lucide-react"
 import type { Metadata } from "next"
 
@@ -65,6 +67,9 @@ export default async function PostPage({ params }: Props) {
                   #{tag}
                 </Link>
               ))}
+            </div>
+            <div className="mt-4">
+              <ShareButtons title={post.title} url={`${siteConfig.url}/posts/${slug}`} />
             </div>
           </header>
 

@@ -1,0 +1,92 @@
+---
+title: "AI 机械 CAD 工作室 - 项目总结"
+date: "2026-05-24"
+tags: ["AI", "CAD", "3D建模", "FastAPI", "Next.js"]
+category: "项目"
+summary: "一个 AI 驱动的参数化 CAD 生成平台，用户输入自然语言描述即可自动生成 3D 模型，支持 STL 和 STEP 格式下载"
+---
+
+## 一、项目概述
+
+这次做了一个 AI 驱动的参数化 CAD 生成平台，用户输入自然语言描述（比如"做一个L型支架，长80宽40高60"），系统就能自动生成对应的 3D 模型，支持下载 STL 和 STEP 格式。
+
+**部署架构：**
+- 前端部署在 Vercel，域名是 cad.myonlyheart.xyz
+- 后端部署在 Railway.app，用 FastAPI 提供 REST 接口
+- DNS 通过 Cloudflare 解析，A 记录指向 Vercel 的 IP
+
+**技术栈：**
+- 前端：Next.js 14 + Three.js + react-three-fiber + TailwindCSS（工业暗色主题）
+- 后端：Python FastAPI + build123d 0.8.0（CAD 建模库）
+- 3D 查看器：Three.js 加载 STL 文件，支持旋转缩放
+- UI 语言：中文
+
+## 二、支持的零件类型
+
+1. **L型支架（LBracket）** - 可调长度、宽度、高度、厚度、孔径、孔数
+2. **T型支架（TBracket）** - 类似参数
+3. **直齿轮（SpurGear）** - 模数、齿数、宽度、孔径
+4. **NEMA17 电机座（NEMA17Mount）** - 底板尺寸、安装高度、孔位间距
+
+## 三、部署架构
+
+### 前端（Vercel）
+
+- 项目根目录设置为 `frontend/`，因为 Vercel 默认从项目根目录找 `package.json`
+- `vercel.json` 放在 `frontend/` 目录下，配置 `/api` 和 `/exports` 的反向代理到 Railway
+- 注意：项目根目录的 `vercel.json` 在 `rootDirectory=frontend` 时会被忽略
+
+### 后端（Railway）
+
+- 用项目根目录的 Dockerfile 构建（不是 `backend/` 目录，因为需要整个项目结构）
+- Dockerfile 用 `python:3.11-slim` 基础镜像，安装 OpenGL 相关依赖（`libgl1` 等）
+- 启动命令：`uvicorn backend.main:app --host 0.0.0.0 --port 8080`
+- `PYTHONPATH=/app` 确保 import 路径正确
+
+## 四、踩过的坑
+
+### 1. build123d 0.8.0 兼容性问题
+
+最大的坑。build123d 0.8.0 和新版 API 差异很大：
+- 没有 `Slot` 类，用 `Rectangle` 代替
+- 没有 `align` 参数
+- `BuildPart` 不能直接传 `Part` 对象进去做布尔运算
+- 解决方案：用 `BuildPart(mode=Mode.SUBTRACT)` 配合 `BuildSketch` 来做减法切割，依赖 build123d 的上下文机制自动关联
+
+### 2. Vercel 代理不生效
+
+一开始把 `vercel.json` 放在项目根目录，但 Vercel 的 `rootDirectory` 设成了 `frontend/`，导致根目录的 `vercel.json` 被完全忽略。前端调 `/api` 时拿到的是 Next.js 的 HTML 页面而不是后端 JSON。
+- 解决方案：在 `frontend/` 目录下也放一份 `vercel.json`
+
+### 3. Dockerfile 目录问题
+
+最初想只把 `backend/` 目录放进 Docker，但 `main.py` 用的是相对导入（`from .api import router`），单独复制 `backend/` 会导致 import 失败。
+- 解决方案：Dockerfile 从项目根目录构建，`COPY . .` 把整个项目复制进去，设置 `PYTHONPATH=/app`，用 `uvicorn backend.main:app` 启动
+
+### 4. Python 包导入问题
+
+`main.py` 用相对导入（`from .api import router`），如果用 `uvicorn main:app` 跑，`main` 会被当成顶层模块，相对导入找不到父包。
+- 解决方案：改用 `uvicorn backend.main:app`，让 `backend` 成为包
+
+### 5. OpenGL 依赖
+
+build123d 需要 OpenGL 渲染，Docker 里要装 `libgl1`、`libglib2.0-0` 等系统包。Debian Trixie 里 `libgl1-mesa-glx` 改名了，直接用 `libgl1`
+
+### 6. .gitignore 和 .env 泄露
+
+最初 `.env` 文件被提交到了 Git 仓库（里面有数据库密码等敏感信息），后来用 `git rm --cached` 清理掉，更新了 `.gitignore`
+
+## 五、修复过程中的意外
+
+执行 `git clean -fd` 时误删了所有源文件，不得不从头恢复。好在代码量不大，逐一重新创建了所有文件。
+
+## 六、最终成果
+
+全部搞定后：
+- 前端正常加载，中文 UI
+- 后端 API 正常响应
+- 可以通过自然语言描述生成 CAD 模型
+- 3D 预览和 STL 下载都正常工作
+- 通过 Vercel 代理，前端和后端通信无障碍
+
+**项目地址：** [cad.myonlyheart.xyz](https://cad.myonlyheart.xyz)

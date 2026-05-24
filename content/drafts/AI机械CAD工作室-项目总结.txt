@@ -1,4 +1,5 @@
 标题: AI 机械 CAD 工作室 - 项目总结
+slug: ai-cad-studio
 日期: 2026-05-24
 标签: AI, CAD, 3D建模, FastAPI, Next.js
 分类: 项目

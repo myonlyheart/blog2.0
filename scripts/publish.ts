@@ -15,12 +15,48 @@ if (files.length === 0) {
   process.exit(0)
 }
 
+/** 从标题自动生成 ASCII slug */
+function generateSlug(title: string): string {
+  // 常见中文词 → 英文映射
+  const mappings: Record<string, string> = {
+    "项目总结": "project-summary",
+    "示例文章": "sample-post",
+    "教程": "tutorial",
+    "指南": "guide",
+    "入门": "getting-started",
+    "部署": "deployment",
+    "配置": "configuration",
+    "安装": "installation",
+    "使用": "usage",
+    "介绍": "introduction",
+    "你好世界": "hello-world",
+  }
+
+  // 尝试匹配完整映射
+  for (const [cn, en] of Object.entries(mappings)) {
+    if (title.includes(cn)) {
+      return en
+    }
+  }
+
+  // 回退：提取 ASCII 字符，转小写，空格变连字符
+  const ascii = title
+    .replace(/[^\x00-\x7F]+/g, "") // 移除非 ASCII
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "")
+
+  return ascii || `post-${Date.now()}`
+}
+
 for (const file of files) {
   const content = fs.readFileSync(path.join(draftsDir, file), "utf8")
-  const slug = file.replace(/\.txt$/, "")
+  const originalSlug = file.replace(/\.txt$/, "")
 
   // 解析格式：
   // 标题: xxx
+  // slug: xxx (可选)
   // 日期: 2026-05-23
   // 标签: 标签1, 标签2
   // 分类: xxx
@@ -37,13 +73,14 @@ for (const file of files) {
       bodyStart = i + 1
       break
     }
-    const match = line.match(/^(标题|日期|标签|分类|摘要)\s*[:：]\s*(.+)$/)
+    const match = line.match(/^(标题|slug|日期|标签|分类|摘要)\s*[:：]\s*(.+)$/)
     if (match) {
       meta[match[1]] = match[2].trim()
     }
   }
 
-  const title = meta["标题"] || slug
+  const title = meta["标题"] || originalSlug
+  const slug = meta["slug"] || generateSlug(title)
   const date = meta["日期"] || new Date().toISOString().split("T")[0]
   const tags = meta["标签"]
     ? meta["标签"].split(/[,，]/).map((t) => t.trim())

@@ -1,92 +1,110 @@
 ---
 title: "AI 机械 CAD 工作室 - 项目总结"
 date: "2026-05-24"
-tags: ["AI", "CAD", "3D建模", "FastAPI", "Next.js"]
+tags: ["AI", "CAD", "3D建模", "FastAPI", "Next.js", "生成式设计"]
 category: "项目"
-summary: "一个 AI 驱动的参数化 CAD 生成平台，用户输入自然语言描述即可自动生成 3D 模型，支持 STL 和 STEP 格式下载"
+summary: "一个 AI 驱动的生成式机械设计平台，输入自然语言即可自动生成多方案对比、约束检查、3D 模型，支持 STL 和 STEP 下载"
 ---
 
 ## 一、项目概述
 
-这次做了一个 AI 驱动的参数化 CAD 生成平台，用户输入自然语言描述（比如"做一个L型支架，长80宽40高60"），系统就能自动生成对应的 3D 模型，支持下载 STL 和 STEP 格式。
+这次做了一个 AI 驱动的生成式机械设计平台。用户输入自然语言描述（比如"做一个轻量化NEMA17电机支架，适配M4螺丝"），系统会自动解析设计意图、生成多个设计方案、进行工程约束检查，最后输出可制造的 3D 模型。
 
-**部署架构：**
-- 前端部署在 Vercel，域名是 cad.myonlyheart.xyz
-- 后端部署在 Railway.app，用 FastAPI 提供 REST 接口
-- DNS 通过 Cloudflare 解析，A 记录指向 Vercel 的 IP
+从最初的"CAD 参数化生成工具"升级为"生成式机械设计工作站"，核心变化是引入了工程智能层。
 
-**技术栈：**
-- 前端：Next.js 14 + Three.js + react-three-fiber + TailwindCSS（工业暗色主题）
-- 后端：Python FastAPI + build123d 0.8.0（CAD 建模库）
-- 3D 查看器：Three.js 加载 STL 文件，支持旋转缩放
-- UI 语言：中文
+技术栈：
+- 前端：Next.js 14 + Three.js + TailwindCSS（工业暗色主题）
+- 后端：Python FastAPI + build123d（CAD 建模）+ SQLAlchemy（数据存储）
+- 部署：后端通过 Cloudflare 隧道对外服务，前端静态导出由 FastAPI 托管
+- 域名：cad.myonlyheart.xyz
 
-## 二、支持的零件类型
+## 二、核心模块
 
-1. **L型支架（LBracket）** - 可调长度、宽度、高度、厚度、孔径、孔数
-2. **T型支架（TBracket）** - 类似参数
-3. **直齿轮（SpurGear）** - 模数、齿数、宽度、孔径
-4. **NEMA17 电机座（NEMA17Mount）** - 底板尺寸、安装高度、孔位间距
+### 1. 工程约束检查引擎（Constraint Engine）
 
-## 三、部署架构
+在生成 CAD 模型之前，先检查参数是否满足制造约束：
 
-### 前端（Vercel）
+- FDM 3D 打印检查：壁厚（最小 1.2mm）、孔径（最小 2.0mm）、悬垂角度（最大 45 度）
+- 标准件验证：公制螺栓通孔（M2-M8）、NEMA 电机安装孔（NEMA17/23/34）、轴承配合（608/625/6001）
+- 几何封闭性检查
 
-- 项目根目录设置为 `frontend/`，因为 Vercel 默认从项目根目录找 `package.json`
-- `vercel.json` 放在 `frontend/` 目录下，配置 `/api` 和 `/exports` 的反向代理到 Railway
-- 注意：项目根目录的 `vercel.json` 在 `rootDirectory=frontend` 时会被忽略
+关键设计：每个检查失败时会返回可修复标记，系统自动修正参数（比如壁厚不够就自动加厚）。
 
-### 后端（Railway）
+API：POST /api/v1/constraint/check
 
-- 用项目根目录的 Dockerfile 构建（不是 `backend/` 目录，因为需要整个项目结构）
-- Dockerfile 用 `python:3.11-slim` 基础镜像，安装 OpenGL 相关依赖（`libgl1` 等）
-- 启动命令：`uvicorn backend.main:app --host 0.0.0.0 --port 8080`
-- `PYTHONPATH=/app` 确保 import 路径正确
+### 2. 设计空间生成器（Design Space Generator）
 
-## 四、踩过的坑
+给定一个零件类型和基本需求，自动生成多个设计方案供用户对比：
 
-### 1. build123d 0.8.0 兼容性问题
+- 支持的变体策略：支架类 4 种（标准/轻量化/加强/薄壁）、电机座 4 种、齿轮 3 种
+- 每个方案附带性能估算：重量等级、强度等级、打印时间
+- 自动成本估算：基于材料密度和体积，计算材料费和电费
+- 推荐机制：根据用户优先级（轻量化/刚性/易打印/低成本）自动推荐最优方案
 
-最大的坑。build123d 0.8.0 和新版 API 差异很大：
-- 没有 `Slot` 类，用 `Rectangle` 代替
-- 没有 `align` 参数
-- `BuildPart` 不能直接传 `Part` 对象进去做布尔运算
-- 解决方案：用 `BuildPart(mode=Mode.SUBTRACT)` 配合 `BuildSketch` 来做减法切割，依赖 build123d 的上下文机制自动关联
+API：POST /api/v1/design/generate
 
-### 2. Vercel 代理不生效
+### 3. 自动装配引擎（Assembly Engine）
 
-一开始把 `vercel.json` 放在项目根目录，但 Vercel 的 `rootDirectory` 设成了 `frontend/`，导致根目录的 `vercel.json` 被完全忽略。前端调 `/api` 时拿到的是 Next.js 的 HTML 页面而不是后端 JSON。
-- 解决方案：在 `frontend/` 目录下也放一份 `vercel.json`
+将多个零件按约束关系自动组装：
 
-### 3. Dockerfile 目录问题
+- 对齐求解：孔对孔、轴中心对齐、Z 轴对齐
+- 装配约束：固定连接、插入配合、滑动配合、间隙配合
+- 约束循环检测
+- 自动生成 build123d 装配代码
 
-最初想只把 `backend/` 目录放进 Docker，但 `main.py` 用的是相对导入（`from .api import router`），单独复制 `backend/` 会导致 import 失败。
-- 解决方案：Dockerfile 从项目根目录构建，`COPY . .` 把整个项目复制进去，设置 `PYTHONPATH=/app`，用 `uvicorn backend.main:app` 启动
+API：POST /api/v1/assembly/build
 
-### 4. Python 包导入问题
+### 4. LLM 设计理解层
 
-`main.py` 用相对导入（`from .api import router`），如果用 `uvicorn main:app` 跑，`main` 会被当成顶层模块，相对导入找不到父包。
-- 解决方案：改用 `uvicorn backend.main:app`，让 `backend` 成为包
+自然语言到工程设计意图的解析：
 
-### 5. OpenGL 依赖
+- 设计意图解析：从"轻量化电机支架，适配M4螺丝"中提取零件类型、约束条件、优先级
+- 关键词映射：载荷等级（light/medium/heavy）、材料（PLA/ABS/PETG/TPU/Nylon）、优先级（lightweight/rigid/printable/fast_print/low_cost）
+- 支持规格识别：螺栓规格（M2-M8）、电机类型（NEMA17/23/34）、轴承型号（608/625/6001）
 
-build123d 需要 OpenGL 渲染，Docker 里要装 `libgl1`、`libglib2.0-0` 等系统包。Debian Trixie 里 `libgl1-mesa-glx` 改名了，直接用 `libgl1`
+核心接口：POST /api/v1/generate-variants（一站式：自然语言 → 多方案）
 
-### 6. .gitignore 和 .env 泄露
+## 三、前端升级
 
-最初 `.env` 文件被提交到了 Git 仓库（里面有数据库密码等敏感信息），后来用 `git rm --cached` 清理掉，更新了 `.gitignore`
+### 方案对比组件（VariantSelector）
 
-## 五、修复过程中的意外
+- 卡片式展示多个设计方案，带性能指标（重量/强度/打印时间，颜色编码）
+- "推荐"和"需修复"标记
+- 点击选择方案后自动生成对应 STL
+- 底部成本对比表
 
-执行 `git clean -fd` 时误删了所有源文件，不得不从头恢复。好在代码量不大，逐一重新创建了所有文件。
+### 设计分析面板（AnalysisPanel）
 
-## 六、最终成果
+- 设计意图摘要：解析出的零件类型、约束条件、优先级排序
+- 约束检查总览：通过/失败状态
+- 问题详情列表：严重级别、是否可自动修复
+- 自动修复记录和剩余需手动处理的问题
 
-全部搞定后：
-- 前端正常加载，中文 UI
-- 后端 API 正常响应
-- 可以通过自然语言描述生成 CAD 模型
-- 3D 预览和 STL 下载都正常工作
-- 通过 Vercel 代理，前端和后端通信无障碍
+## 四、完整数据流
 
-**项目地址：** [cad.myonlyheart.xyz](https://cad.myonlyheart.xyz)
+用户输入自然语言
+  → LLM 设计理解层解析意图
+  → 设计空间生成器生成 4 个方案
+  → 约束检查引擎验证每个方案
+  → 成本估算器计算对比数据
+  → 前端展示方案选择器 + 分析面板
+  → 用户选择方案
+  → build123d 生成 CAD 模型
+  → 导出 STL/STEP
+  → 3D 预览
+
+## 五、部署变更
+
+从 Vercel + Railway 迁移到本地 + Cloudflare 隧道：
+
+- 后端运行在本地 Windows 机器，通过 uvicorn 提供服务
+- 前端改为静态导出（Next.js output: 'export'），由 FastAPI 直接托管
+- 单一入口：所有请求通过 cad.myonlyheart.xyz 进入，FastAPI 同时提供 API 和静态页面
+- 隧道配置：在现有 Cloudflare 命名隧道中添加 cad.myonlyheart.xyz → localhost:8000 路由
+- 启动脚本：start_cad.bat 一键启动
+
+## 六、访问方式
+
+本地：http://localhost:8000
+公网：https://cad.myonlyheart.xyz
+API 文档：http://localhost:8000/docs

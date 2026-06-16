@@ -1,0 +1,201 @@
+---
+title: "CC Desktop Pet：把 Claude Code 状态变成桌面小组件"
+date: "2026-06-16"
+tags: ["Electron", "Claude Code", "桌面应用", "AI Agent", "React"]
+category: "项目总结"
+summary: "一个基于 Electron、React 和 TypeScript 的透明桌面悬浮应用，监听 Claude Code 的进程和日志，把思考、编码、终端执行、等待确认等状态变成可见的桌面提示。"
+---
+
+## 一、项目概述
+
+CC Desktop Pet，也就是项目里的 AgentPet，是一个面向 Claude Code 的桌面悬浮小组件。
+
+它不是另一个聊天窗口，也不是一个完整 IDE，而是一个常驻后台的本地监听器：当电脑上运行 `claude` 或 `claude-code` 时，它自动出现在桌面；Claude Code 退出后，它自动隐藏。平时它用透明、无边框、置顶的小窗口显示当前状态，让 AI Agent 的工作过程不再只埋在终端日志里。
+
+这个项目的核心目标很明确：把 Claude Code 的运行状态变成一种更轻、更直观、更不打扰的桌面反馈。
+
+## 二、为什么要做这个项目
+
+使用 Claude Code 时，终端里会不断出现工具调用、文件修改、命令执行、权限确认、错误信息和完成提示。问题是，这些状态都挤在同一个文本流里。
+
+当你同时打开浏览器、编辑器、文档和终端时，经常会遇到几个小痛点：
+
+- Claude Code 正在思考还是已经卡住，不切回终端就不确定。
+- 它是不是正在跑命令、改文件、等待权限确认，需要反复看终端。
+- 终端窗口被其他窗口盖住时，任务状态很容易被忽略。
+- 桌面上缺少一个轻量状态灯，告诉你 AI Agent 现在处于哪个阶段。
+
+AgentPet 做的事情，就是把这些状态抽出来，放到桌面角落里。它不替代 Claude Code，只负责把 Claude Code 的状态“可视化”。
+
+## 三、当前版本的功能
+
+当前版本已经固定为 Claude Code 监听模式，不再让用户手动切换 Agent 类型。这样做的好处是逻辑更专注：所有设置、状态映射、自动弹出和权限确认都围绕 Claude Code 展开。
+
+主要能力包括：
+
+- 自动检测 `claude` / `claude-code` 进程。
+- 检测到 Claude Code 后自动显示窗口，退出后自动隐藏。
+- 监听 Claude Code 日志目录变化。
+- 把日志内容映射成 `thinking`、`coding`、`terminal`、`waiting`、`success`、`error`、`low_quota` 等状态。
+- 用短中文状态气泡展示当前状态，避免直接暴露原始日志。
+- 支持设置窗口大小、置顶、鼠标穿透、日志路径、自动弹出等选项。
+- 保留最近事件列表，方便回看状态变化。
+- 在 Windows 上捕获权限确认请求，并提供“同意 / 本次会话 / 拒绝”的桌面卡片。
+
+从使用体验上看，它更像一个 Claude Code 的桌面状态面板，只是表现形式更轻巧。
+
+## 四、整体架构
+
+项目技术栈是 Electron + React + TypeScript + Vite。
+
+主进程负责本地系统能力，渲染进程负责界面展示，preload 层用 `contextBridge` 暴露安全 API。整体链路可以概括为：
+
+```text
+Electron main
+  -> 创建透明置顶窗口
+  -> 注册 IPC
+  -> 启动 AgentMonitorManager
+  -> 启动 AutoPopupMonitor
+  -> 监听 Claude Code 日志和进程
+  -> 通过 IPC 推送状态变化
+React renderer
+  -> 渲染桌面形象
+  -> 渲染状态气泡
+  -> 渲染设置面板和事件列表
+```
+
+目录上也基本按职责拆开：
+
+- `src/main`：窗口、托盘、IPC、配置、监听器、权限控制。
+- `src/preload`：给渲染层暴露白名单 API。
+- `src/renderer`：React 界面、组件和 hooks。
+- `src/main/agent`：Claude Code 监听、进程检测、状态映射和事件类型。
+
+这个划分很适合桌面工具：系统能力留在 main process，UI 只通过受控 API 调用本地能力。
+
+## 五、进程检测：让窗口自己出现和消失
+
+`AutoPopupMonitor` 是这个项目里最直接影响体验的模块。
+
+它每 2.5 秒扫描一次本机进程，判断是否存在名称包含 `claude` 或 `claude-code` 的进程。检测到 Claude Code 从未运行变成运行时，它会：
+
+- 显示桌面窗口。
+- 调用 `moveTop()` 把窗口移到前面。
+- 隐藏设置面板，恢复为小组件状态。
+
+当 Claude Code 退出时，它会自动隐藏窗口，但 AgentPet 自己仍然在后台运行，等待下一次 Claude Code 启动。
+
+这个设计很重要。用户不需要每次手动打开或关闭桌面组件，它跟着 Claude Code 的生命周期走。
+
+## 六、日志监听：从文本流里提取状态
+
+真正的状态变化来自 `ClaudeCodeMonitor`。
+
+它会寻找几个候选日志路径：
+
+- 用户手动配置的 Claude 日志路径。
+- 用户目录下的 `.claude`。
+- 用户目录下的 `.config/claude`。
+- 当前工作目录里的 `.claude`。
+
+找到路径后，项目使用 `chokidar` 监听文件新增和变化。每次文件变化时，它不是重新处理整个文件，而是根据上一次读取的位置，只读取新增内容，再交给 `statusMapper` 判断状态。
+
+`statusMapper` 的规则很朴素但有效：
+
+- 出现 `Edit`、`Write`、`Patch`、`diff`、`file`，认为正在编码。
+- 出现 `Bash`、`shell`、`command`、`terminal`，认为正在跑命令。
+- 出现 `permission`、`approve`、`confirm`，认为正在等待确认。
+- 出现 `error`、`failed`、`exception`，认为发生错误。
+- 出现 `quota`、`rate limit`、`usage limit`，认为额度不足或接近限制。
+- 没有命中特定规则时，默认归为思考状态。
+
+这种实现不复杂，但很适合当前阶段：先把“可观察状态”跑通，再逐步提高识别精度。
+
+## 七、窗口设计：透明、置顶、可拖动、可收缩
+
+桌面小组件最容易踩坑的地方不是 React，而是窗口行为。
+
+AgentPet 的窗口由 `windowManager` 管理。它创建的是一个透明、无边框、不进任务栏的 `BrowserWindow`，默认大小约为 `220 x 220`。窗口位置会持久化保存，下次启动时可以恢复到原来的桌面位置。
+
+为了避免被 Wallpaper Engine 或动态壁纸压住，窗口置顶层级使用了：
+
+```ts
+setAlwaysOnTop(true, "screen-saver")
+```
+
+同时还提供了几个实用控制：
+
+- `setClickThrough`：开启鼠标穿透，避免挡住桌面操作。
+- `setWindowScale`：调整小组件大小。
+- `expandForSettings`：打开设置时扩大窗口。
+- `restorePetSize`：关闭设置后恢复小窗口。
+
+这让它在平时保持轻量，需要配置时又能临时变成完整面板。
+
+## 八、界面层：状态气泡和事件列表
+
+渲染层的结构比较清晰。
+
+`App.tsx` 负责加载配置、订阅状态、维护最近事件、控制设置面板和权限卡片。`Pet.tsx` 根据当前状态选择对应 GIF，如果 GIF 不存在，就回退到 CSS 绘制的占位形象。`StatusBubble.tsx` 只展示短中文文案，避免把 Claude 原始日志直接贴到桌面上。
+
+状态文案也很克制：
+
+- `thinking`：Claude 正在思考...
+- `coding`：正在改代码
+- `terminal`：正在跑命令
+- `waiting`：等你确认一下
+- `success`：任务完成
+- `error`：好像出错了
+- `low_quota`：额度快不够了
+
+这类文案的作用不是解释所有细节，而是让用户一眼知道现在该不该切回终端。
+
+## 九、权限确认：把等待操作推到桌面
+
+项目里最实用的一个细节是权限确认卡片。
+
+当日志状态被识别为 `waiting`，并且消息里包含 permission、approval、confirm、do you want to proceed 等关键词时，`permissionController` 会创建一个权限请求。它会先捕获当前前台窗口句柄，然后把 AgentPet 窗口显示到最前面，关闭鼠标穿透，并在桌面上展示三个按钮：
+
+- 同意
+- 本次会话
+- 拒绝
+
+在 Windows 上，用户点击后，程序会通过 PowerShell 调用 `System.Windows.Forms.SendKeys`，把对应按键发送回 Claude Code 所在终端窗口。
+
+这让 AgentPet 不只是状态展示工具，也开始承担一部分轻交互能力。它把“你需要确认一下”从终端里提出来，变成桌面上的明确动作。
+
+## 十、配置持久化和安全边界
+
+配置使用 `electron-store` 保存，主要包括：
+
+- Claude 日志路径
+- 窗口位置
+- 窗口大小
+- 是否置顶
+- 是否鼠标穿透
+- 是否自动弹出
+- 是否启用声音、通知和 MCP mode
+
+安全边界上，渲染层没有直接打开 Node 能力。所有本地操作都通过 preload 暴露的 `window.agentPet` API 完成，例如获取配置、更新配置、获取最近事件、恢复窗口、响应权限请求等。
+
+这对于 Electron 应用很关键：UI 可以做得灵活，但系统能力必须收口。
+
+## 十一、当前版本的边界
+
+这个项目现在已经具备一个可用桌面工具的骨架，但仍然有一些明显的下一步空间：
+
+- 状态识别目前主要依赖关键词，可以继续接入更结构化的 Claude Code 事件源。
+- GIF 资源可以补齐，让不同状态有更明显的视觉差异。
+- 权限确认目前主要面向 Windows 终端，跨平台能力还可以继续扩展。
+- 声音和通知配置已经在 UI 中预留，可以逐步补完整行为。
+- MCP mode 已经出现在配置里，后续可以作为更深层的 Agent 集成入口。
+
+我喜欢这个项目的一点是，它没有一开始就做成复杂控制台，而是先抓住了最真实的使用痛点：AI Agent 在工作，但用户不知道它现在卡在哪一步。
+
+## 十二、总结
+
+CC Desktop Pet 的价值不在于“多一个桌面装饰”，而在于它把 Claude Code 的后台工作状态变得可见。
+
+它通过进程检测决定何时出现，通过日志增量监听理解 Claude Code 正在做什么，通过状态映射把复杂文本压缩成短提示，再通过透明置顶窗口把这些提示放到用户视野里。
+
+这是一种很适合 AI 编程工具的辅助界面：不打断、不抢主流程，但在关键时刻提醒你。对本地 AI Agent 来说，这类轻量状态层会越来越重要，因为我们需要的不只是更强的模型，也需要更好的“协作感”。

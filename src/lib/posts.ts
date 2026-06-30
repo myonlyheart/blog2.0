@@ -2,7 +2,7 @@ import fs from "fs"
 import path from "path"
 import matter from "gray-matter"
 import readingTime from "reading-time"
-import type { Post, PostMeta, TagInfo, CategoryInfo } from "@/types/post"
+import type { Post, PostMeta, PostSection, TagInfo, CategoryInfo } from "@/types/post"
 
 const postsDirectory = path.join(process.cwd(), "content/posts")
 
@@ -10,6 +10,40 @@ function ensurePostsDirectory() {
   if (!fs.existsSync(postsDirectory)) {
     fs.mkdirSync(postsDirectory, { recursive: true })
   }
+}
+
+const sectionKeywords: Record<PostSection, string[]> = {
+  projects: [
+    "项目",
+    "project",
+    "网站",
+    "工作室",
+    "studio",
+    "agent",
+    "代码",
+    "coding",
+    "github",
+    "desktop",
+    "app",
+  ],
+  mechanical: ["机械", "cad", "solidworks", "sw", "建模", "图纸", "工程", "齿轮", "装配"],
+  thinking: ["社会", "思考", "哲学", "审美", "阶级", "现象", "文化", "生活"],
+}
+
+function normalizeSection(
+  value: unknown,
+  title: string,
+  category: string,
+  tags: string[],
+): PostSection {
+  if (value === "mechanical" || value === "thinking" || value === "projects") return value
+
+  const haystack = [title, category, ...tags].join(" ").toLowerCase()
+  for (const section of ["projects", "mechanical", "thinking"] as const) {
+    if (sectionKeywords[section].some((keyword) => haystack.includes(keyword))) return section
+  }
+
+  return "thinking"
 }
 
 export function getAllPosts(): PostMeta[] {
@@ -25,11 +59,16 @@ export function getAllPosts(): PostMeta[] {
     const stats = readingTime(content)
     const wordCount = content.split(/\s+/).length
 
+    const title = data.title || slug
+    const category = data.category || "未分类"
+    const tags = data.tags || []
+
     return {
-      title: data.title || slug,
+      title,
       date: data.date || new Date().toISOString().split("T")[0],
-      tags: data.tags || [],
-      category: data.category || "未分类",
+      tags,
+      category,
+      section: normalizeSection(data.section, title, category, tags),
       summary: data.summary || "",
       cover: data.cover,
       slug,
@@ -52,11 +91,16 @@ export function getPostBySlug(slug: string): Post | null {
   const stats = readingTime(content)
   const wordCount = content.split(/\s+/).length
 
+  const title = data.title || slug
+  const category = data.category || "未分类"
+  const tags = data.tags || []
+
   return {
-    title: data.title || slug,
+    title,
     date: data.date || new Date().toISOString().split("T")[0],
-    tags: data.tags || [],
-    category: data.category || "未分类",
+    tags,
+    category,
+    section: normalizeSection(data.section, title, category, tags),
     summary: data.summary || "",
     cover: data.cover,
     slug,
@@ -122,6 +166,10 @@ export function getAllCategories(): CategoryInfo[] {
 
 export function getPostsByCategory(category: string): PostMeta[] {
   return getAllPosts().filter((post) => post.category === category)
+}
+
+export function getPostsBySection(section: PostSection): PostMeta[] {
+  return getAllPosts().filter((post) => post.section === section)
 }
 
 export function getArchivePosts(): { year: number; posts: PostMeta[] }[] {

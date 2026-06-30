@@ -1,18 +1,4 @@
 {
   "version": 1,
-  "resources": [
-    {
-      "title": "CAD练习册6.",
-      "description": "",
-      "project": "个人资料",
-      "kind": "resume",
-      "fileName": "CAD练习册6..pdf",
-      "size": 34752,
-      "objectKey": "resources/2026/c5620e07-239e-49f8-a089-e7a7b3d059fd-CAD-6..pdf",
-      "publicUrl": "https://myonlyheart-public-files.oss-cn-hongkong.aliyuncs.com/resources/2026/c5620e07-239e-49f8-a089-e7a7b3d059fd-CAD-6..pdf",
-      "id": "13532f3c-f666-44c8-8178-d192b193d3eb",
-      "extension": "pdf",
-      "uploadedAt": "2026-06-30T14:18:52.170Z"
-    }
-  ]
+  "resources": []
 }

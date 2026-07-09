@@ -1,4 +1,18 @@
 {
   "version": 1,
-  "resources": []
+  "resources": [
+    {
+      "title": "巴雷特",
+      "description": "sw打开",
+      "project": "个人资料",
+      "kind": "solidworks",
+      "fileName": "巴雷特.SLDASM",
+      "size": 470083,
+      "objectKey": "resources/2026/b2584130-05a0-4ff1-a04d-e17c9779a29e--.SLDASM",
+      "publicUrl": "https://myonlyheart-public-files.oss-cn-hongkong.aliyuncs.com/resources/2026/b2584130-05a0-4ff1-a04d-e17c9779a29e--.SLDASM",
+      "id": "f2546918-aebd-4468-915f-770c1032b259",
+      "extension": "sldasm",
+      "uploadedAt": "2026-07-09T11:12:11.119Z"
+    }
+  ]
 }

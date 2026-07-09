@@ -1,4 +1,18 @@
 {
   "version": 1,
-  "resources": []
+  "resources": [
+    {
+      "title": "巴雷特",
+      "description": "Folder package: 巴雷特, 16 files.",
+      "project": "个人资料",
+      "kind": "solidworks",
+      "fileName": "巴雷特.zip",
+      "size": 2828199,
+      "objectKey": "resources/2026/c7f3d364-e4f5-445e-836e-8c422c751455--.zip",
+      "publicUrl": "https://myonlyheart-public-files.oss-cn-hongkong.aliyuncs.com/resources/2026/c7f3d364-e4f5-445e-836e-8c422c751455--.zip",
+      "id": "7a089eaa-2758-4f44-a31d-a5e848b9df1a",
+      "extension": "zip",
+      "uploadedAt": "2026-07-09T14:49:27.104Z"
+    }
+  ]
 }

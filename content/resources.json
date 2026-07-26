@@ -2,19 +2,6 @@
   "version": 1,
   "resources": [
     {
-      "title": "机械手臂",
-      "description": "机械手臂\nFolder package: 机械手臂, 26 files.",
-      "project": "个人",
-      "kind": "solidworks",
-      "fileName": "机械手臂.zip",
-      "size": 8821473,
-      "objectKey": "resources/2026/ce1196e4-4755-4825-bfe9-5f920a88894a--.zip",
-      "publicUrl": "https://myonlyheart-public-files.oss-cn-hongkong.aliyuncs.com/resources/2026/ce1196e4-4755-4825-bfe9-5f920a88894a--.zip",
-      "id": "b3f71366-8bb1-45f1-b4d5-2287c944a74b",
-      "extension": "zip",
-      "uploadedAt": "2026-07-25T13:37:53.748Z"
-    },
-    {
       "title": "巴雷特",
       "description": "Folder package: 巴雷特, 16 files.",
       "project": "个人资料",

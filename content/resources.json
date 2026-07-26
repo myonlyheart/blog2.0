@@ -2,6 +2,19 @@
   "version": 1,
   "resources": [
     {
+      "title": "机械手臂",
+      "description": "点进去后打开机械手臂文件夹后选择机械手臂.SLDASM,不要选机械臂\nFolder package: 机械手臂, 28 files.",
+      "project": "个人资料",
+      "kind": "resume",
+      "fileName": "机械手臂.zip",
+      "size": 9618646,
+      "objectKey": "resources/2026/007dd5ce-9e60-4c05-8f7e-7c707aa4a704--.zip",
+      "publicUrl": "https://myonlyheart-public-files.oss-cn-hongkong.aliyuncs.com/resources/2026/007dd5ce-9e60-4c05-8f7e-7c707aa4a704--.zip",
+      "id": "66e00196-dca7-4e28-bbd7-63b50ef14b37",
+      "extension": "zip",
+      "uploadedAt": "2026-07-26T13:54:50.216Z"
+    },
+    {
       "title": "巴雷特",
       "description": "Folder package: 巴雷特, 16 files.",
       "project": "个人资料",

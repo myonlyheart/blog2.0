@@ -1,4 +1,5 @@
 import { compileMDX } from "next-mdx-remote/rsc"
+import remarkBreaks from "remark-breaks"
 import remarkGfm from "remark-gfm"
 import remarkMath from "remark-math"
 import rehypeSlug from "rehype-slug"
@@ -37,7 +38,7 @@ export async function renderMDX(content: string) {
     source: content,
     options: {
       mdxOptions: {
-        remarkPlugins: [remarkGfm, remarkMath],
+        remarkPlugins: [remarkGfm, remarkBreaks, remarkMath],
         rehypePlugins: [
           rehypeSlug,
           [

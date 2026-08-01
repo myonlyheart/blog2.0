@@ -74,7 +74,7 @@ export default function ProjectsPage() {
       <section id="downloads" className="scroll-mt-24 border-t pt-14">
         <h2 className="text-2xl font-semibold">文件下载</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          支持 PDF、DWG、PY、SLDPRT、SLDASM、SLDDRW、STEP、STL 与 ZIP。
+          支持 PDF、JPG、JPEG、DWG、PY、SLDPRT、SLDASM、SLDDRW、STEP、STL 与 ZIP。
         </p>
         {resources.length ? (
           <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

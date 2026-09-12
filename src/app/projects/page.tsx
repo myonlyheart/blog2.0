@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import { ArrowRight, Box, Code2, Download, FileText, Ruler } from "lucide-react"
 import { getPostsBySection } from "@/lib/posts"
-import { formatFileSize, getResources } from "@/lib/resources"
+import { formatFileSize, getResources, getResourceUrl } from "@/lib/resources"
 import { PostCard } from "@/components/post-card"
 import type { ResourceKind } from "@/types/resource"
 export const metadata: Metadata = {
@@ -40,9 +40,9 @@ export default function ProjectsPage() {
         </div>
         {resume ? (
           <a
-            href={resume.publicUrl}
+            href={getResourceUrl(resume)}
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
             className="inline-flex h-11 items-center gap-2 rounded-lg bg-primary px-5 text-sm text-primary-foreground"
           >
             <Download className="h-4 w-4" />
@@ -96,9 +96,9 @@ export default function ProjectsPage() {
                     {r.extension.toUpperCase()} · {formatFileSize(r.size)}
                   </p>
                   <a
-                    href={r.publicUrl}
+                    href={getResourceUrl(r)}
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
                     className="mt-5 inline-flex items-center gap-2 text-sm font-medium"
                   >
                     下载文件 <ArrowRight className="h-4 w-4" />

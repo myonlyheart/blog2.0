@@ -1,5 +1,6 @@
 import fs from "node:fs"
 import path from "node:path"
+import { buildDownloadUrl, downloadConfig } from "@/config/downloads"
 import type { ProjectResource, ResourceManifest } from "@/types/resource"
 
 const manifestPath = path.join(process.cwd(), "content/resources.json")
@@ -11,11 +12,19 @@ export function getResources(): ProjectResource[] {
     const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8")) as ResourceManifest
     if (manifest.version !== 1 || !Array.isArray(manifest.resources)) return []
     return manifest.resources
-      .filter((resource) => Boolean(resource.id && resource.title && resource.publicUrl))
+      .filter((resource) =>
+        Boolean(resource.id && resource.title && (resource.objectKey || resource.publicUrl)),
+      )
       .sort((left, right) => right.uploadedAt.localeCompare(left.uploadedAt))
   } catch {
     return []
   }
+}
+
+export function getResourceUrl(resource: ProjectResource): string {
+  if (resource.objectKey && (downloadConfig.useR2 || !resource.publicUrl))
+    return buildDownloadUrl(resource.objectKey)
+  return resource.publicUrl || "#"
 }
 
 export function formatFileSize(bytes: number): string {

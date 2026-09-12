@@ -10,7 +10,8 @@ export interface ProjectResource {
   extension: string
   size: number
   version?: string
-  publicUrl: string
+  objectKey?: string
+  publicUrl?: string
   uploadedAt: string
 }
 

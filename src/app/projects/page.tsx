@@ -46,7 +46,7 @@ export default function ProjectsPage() {
             className="inline-flex h-11 items-center gap-2 rounded-lg bg-primary px-5 text-sm text-primary-foreground"
           >
             <Download className="h-4 w-4" />
-            下载最新项目
+            下载最新简历
           </a>
         ) : (
           <span className="rounded-lg border bg-background/70 px-4 py-3 text-sm text-muted-foreground">

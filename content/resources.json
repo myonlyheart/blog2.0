@@ -2,6 +2,19 @@
   "version": 1,
   "resources": [
     {
+      "title": "MAOS-Agent",
+      "description": "Folder package: MAOS-Agent, 392 files.",
+      "project": "个人资料",
+      "kind": "resume",
+      "fileName": "MAOS-Agent.zip",
+      "size": 877783,
+      "objectKey": "resources/2026/24c0c1a2-794e-4013-b30d-ee80a46aefd4-MAOS-Agent.zip",
+      "publicUrl": "https://downloads.myonlyheart.xyz/resources/2026/24c0c1a2-794e-4013-b30d-ee80a46aefd4-MAOS-Agent.zip",
+      "id": "7ac54a0e-91e4-4998-8bc5-014396fc7b97",
+      "extension": "zip",
+      "uploadedAt": "2026-09-12T08:37:34.065Z"
+    },
+    {
       "title": "机械手臂",
       "description": "点进去后打开机械手臂文件夹后选择机械手臂.SLDASM,不要选机械臂\nFolder package: 机械手臂, 28 files.",
       "project": "个人资料",

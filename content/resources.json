@@ -2,6 +2,19 @@
   "version": 1,
   "resources": [
     {
+      "title": "机械手臂",
+      "description": "Folder package: 机械手臂, 49 files.",
+      "project": "个人资料",
+      "kind": "solidworks",
+      "fileName": "机械手臂.zip",
+      "size": 9623550,
+      "objectKey": "resources/2026/d501bca2-80c7-4146-9f1a-3b26e71a40d8--.zip",
+      "publicUrl": "https://downloads.myonlyheart.xyz/resources/2026/d501bca2-80c7-4146-9f1a-3b26e71a40d8--.zip",
+      "id": "93e0f68e-0bbc-49bb-a4a0-713f209d56db",
+      "extension": "zip",
+      "uploadedAt": "2026-09-12T08:42:44.070Z"
+    },
+    {
       "title": "MAOS-Agent",
       "description": "Folder package: MAOS-Agent, 392 files.",
       "project": "个人资料",

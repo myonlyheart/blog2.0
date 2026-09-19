@@ -22,15 +22,38 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const post = getPostBySlug(slug)
   if (!post) return {}
 
+  const url = `${siteConfig.url}/posts/${slug}`
+  const image = post.cover || siteConfig.ogImage
+
   return {
     title: post.title,
     description: post.summary,
+    alternates: {
+      canonical: url,
+    },
     openGraph: {
       title: post.title,
       description: post.summary,
+      url,
+      siteName: siteConfig.name,
+      locale: "zh_CN",
       type: "article",
       publishedTime: post.date,
       tags: post.tags,
+      images: [
+        {
+          url: image,
+          width: 1200,
+          height: 630,
+          alt: post.title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description: post.summary,
+      images: [image],
     },
   }
 }

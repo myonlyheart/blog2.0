@@ -11,7 +11,6 @@ interface ShareButtonsProps {
 
 export function ShareButtons({ title, url }: ShareButtonsProps) {
   const [copied, setCopied] = useState(false)
-  const [sharing, setSharing] = useState(false)
   const [message, setMessage] = useState("")
   const [showLink, setShowLink] = useState(false)
 
@@ -28,25 +27,12 @@ export function ShareButtons({ title, url }: ShareButtonsProps) {
     }
   }
 
-  const shareArticle = async () => {
-    if (sharing) return
-    setMessage("")
-    setCopied(false)
-    setShowLink(false)
-
-    if (typeof navigator.share === "function") {
-      setSharing(true)
-      try {
-        await navigator.share({ title, url })
-        return
-      } catch (error) {
-        if (error instanceof Error && error.name === "AbortError") return
-      } finally {
-        setSharing(false)
-      }
-    }
-
-    await copyLink()
+  const shareTwitter = () => {
+    window.open(
+      `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`,
+      "_blank",
+      "noopener,noreferrer"
+    )
   }
 
   return (
@@ -55,10 +41,9 @@ export function ShareButtons({ title, url }: ShareButtonsProps) {
       <Button
         variant="ghost"
         size="icon"
-        onClick={shareArticle}
-        disabled={sharing}
-        aria-label="分享文章"
-        title="分享文章"
+        onClick={shareTwitter}
+        aria-label="分享到 Twitter / X"
+        title="分享到 Twitter / X"
       >
         <Share2 className="h-4 w-4" />
       </Button>
